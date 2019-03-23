@@ -29,7 +29,13 @@ extern "C" {
 
 	inline float GJKVec2Dot(GJKVec2 a, GJKVec2 b)
 	{
-		return a.x*b.x;
+		return a.x*b.x + a.y*b.y;
+	}
+
+	//return z coordinate of 3d vector perpendicular to 2d vectors a and b 
+	inline float GJKVec2Cross(GJKVec2 a, GJKVec2 b)
+	{
+		return a.x* b.y - a.y * b.x;
 	}
 
 	inline GJKVec2 GJKVec2Neg(GJKVec2 a)
@@ -75,7 +81,73 @@ extern "C" {
 
 			if (size == 2) // we can build only a line
 			{
-
+				//set searchDirection to vector, perpendicular to AB, that points torward origin
+				GJKVec2 AB = { simplex[1].x - simplex[0].x, simplex[1].y - simplex[0].y };
+				float cross = GJKVec2Cross(AB, simplex[1]);
+				searchDirection.x = AB.x * cross;
+				searchDirection.y = -(AB.y * cross);
+			}
+			else // triangle
+			{
+				GJKVec2 AOrigin = GJKVec2Neg(simplex[2]);
+				GJKVec2 AB = { simplex[2].x - simplex[1].x, simplex[2].y - simplex[1].y };
+				GJKVec2 AC = { simplex[2].x - simplex[0].x, simplex[2].y - simplex[0].y };
+				float cross = GJKVec2Cross(AB, AC);
+				GJKVec2 ACNormal = { -(AC.y * cross), AC.x * cross };
+				GJKVec2 ABNormal = { AB.x * cross, -(AB.y * cross) };
+				if (GJKVec2Dot(AOrigin, ACNormal) > 0) 
+				{
+					if (GJKVec2Dot(AOrigin, AC))
+					{
+						simplex[1] = simplex[2];
+						searchDirection = ACNormal;
+						size--;
+						continue;
+					}
+					else
+					{
+						if (GJKVec2Dot(AOrigin, AB) > 0)
+						{
+							simplex[0] = simplex[1];
+							simplex[1] = simplex[2];
+							searchDirection = ABNormal;
+							size--;
+							continue;
+						}
+						else
+						{
+							simplex[0] = simplex[2];
+							searchDirection = AOrigin;
+							size = 1;
+							continue;
+						}
+					}
+				}
+				else
+				{
+					if (GJKVec2Dot(AOrigin, ABNormal))
+					{
+						if (GJKVec2Dot(AOrigin, AB) > 0)
+						{
+							simplex[0] = simplex[1];
+							simplex[1] = simplex[2];
+							searchDirection = ABNormal;
+							size--;
+							continue;
+						}
+						else
+						{
+							simplex[0] = simplex[2];
+							searchDirection = AOrigin;
+							size = 1;
+							continue;
+						}
+					}
+					else
+					{
+						return 1;
+					}
+				}
 			}
 
 		}
