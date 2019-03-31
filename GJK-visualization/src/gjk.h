@@ -42,8 +42,8 @@ extern "C" {
 	{
 		GJKVec2 c;
 
-		c.x = a.x;
-		c.y = a.y;
+		c.x = -a.x;
+		c.y = -a.y;
 		return c;
 	}
 
@@ -95,9 +95,9 @@ extern "C" {
 				float cross = GJKVec2Cross(AB, AC);
 				GJKVec2 ACNormal = { -(AC.y * cross), AC.x * cross };
 				GJKVec2 ABNormal = { AB.x * cross, -(AB.y * cross) };
-				if (GJKVec2Dot(AOrigin, ACNormal) > 0) 
+				if (GJKVec2Dot(AOrigin, ACNormal) > 0)
 				{
-					if (GJKVec2Dot(AOrigin, AC))
+					if (GJKVec2Dot(AOrigin, AC) > 0)
 					{
 						simplex[1] = simplex[2];
 						searchDirection = ACNormal;
@@ -125,7 +125,7 @@ extern "C" {
 				}
 				else
 				{
-					if (GJKVec2Dot(AOrigin, ABNormal))
+					if (GJKVec2Dot(AOrigin, ABNormal) > 0)
 					{
 						if (GJKVec2Dot(AOrigin, AB) > 0)
 						{
