@@ -34,7 +34,8 @@ unsigned int VAO1, VAO2, VAO3, VBO1, VBO2, VBO3, vertex, fragment, shader;
 vec4 fcolor = { 0.f, 0.f, 1.f, 1.f };
 vec4 scolor = { 1.f, 0.f, 0.f, 1.f };
 vec4 mcolor = { 0.f, 1.f, 0.f, 1.f };
-vec2 position1, position2 = { 200.f, 0.f };
+vec4 ocolor = { 1.f, 1.f, 1.f, 0.1f };
+vec2 position1, position2;
 
 int size1 = 3, size2 = 4;
 vec2 vertices1[16] = {
@@ -48,6 +49,14 @@ vec2 vertices2[16] = {
  {-50.f, 50.f},
  {50.f, 50.f},
  {50.f, -50.f}
+};
+
+vec2 originLines[4] =
+{
+	{-1.f, 0.f},
+	{1.f, 0.f},
+	{0.f, 1.f},
+	{0.f, -1.f}
 };
 
 vec2 minkowskiVertices[sizeof(vertices1) / sizeof(vertices1[0]) * sizeof(vertices2) / sizeof(vertices2[0])];
@@ -365,7 +374,7 @@ int main()
 		glfwGetCursorPos(window, &xpos, &ypos);
 		vec2 cursorPos = { (float)xpos - width / 2, (float)-ypos + height / 2 };
 		ImGui::Text("World: Mouse x: %f | Mouse y: %f", cursorPos.x, cursorPos.y);
-		//ImGui::Text("Intersecting: %s", GJKIntersect((GJKSupportFunction) &firstGJKSupportFunction, (GJKSupportFunction) secondGJKSupportFunction) ? "true" : "false");
+		ImGui::Text("Intersecting: %s", GJKIntersect((GJKSupportFunction) &firstGJKSupportFunction, (GJKSupportFunction) secondGJKSupportFunction) ? "true" : "false");
 		bool checked;
 		ImGui::Checkbox("Draw minkowski difference", &checked);
 		if (checked)
@@ -389,12 +398,26 @@ int main()
 			glBindVertexArray(VAO3);
 			glDrawArrays(GL_LINE_LOOP, 0, hullSize);
 		}
+		if (ImGui::CollapsingHeader("Colors"))
+		{
+			ImGui::ColorEdit4("First object", &fcolor.x);
+			ImGui::ColorEdit4("Second object", &scolor.x);
+			ImGui::ColorEdit4("Minkowski difference", &mcolor.x);
+			ImGui::ColorEdit4("Axes", &ocolor.x);
+		}
 		if (ImGui::CollapsingHeader("Help"))
 		{
 			ImGui::BulletText("Left click to move first object, right for second");
 			ImGui::BulletText("Shift + drag on object points to change it");
 		}
 		ImGui::End();
+
+		glUniform4fv(glGetUniformLocation(shader, "color"), 1, (float*)& ocolor);
+		glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, (float*)& mat44Translate({ 0.f, 0.f, -0.5f }));
+		glBindVertexArray(VAO3);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO3);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(originLines), originLines, GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_LINES, 0, sizeof(originLines) / sizeof(originLines[0]));
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
